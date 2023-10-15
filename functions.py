@@ -8,7 +8,9 @@ from error_handl_decorator import CustomError
 from classes import *
 from input_format_verification import *
 import difflib  # matches library
+from notebook import *
 
+notes = NoteBook("notest.bin")
 
 # parameter cutoff regulates sensitivity for matching, 1.0 - full match, 0.0 - input always matches
 def find_closest_match(user_input, commands):
@@ -93,7 +95,42 @@ def parse_input(user_input):
                         print("Please enter a valid number.")
 
                   return func(days)
+
+            elif func == add_note:
+                print('please write your note here (duble enter to finish): ')
+                text = []
+                while True:
+                    new_text = input()
+                    if not new_text:
+                        break
+                    text.append(new_text)
+                tags = input('please provide tegs separeted with spaces: ')
+                return func('\n'.join(text), tags)
+
+            elif func == delete_note:
+                id = input('please provide a note id: ')
+                return func(id)
+
+            elif func == edit_text:
+                id = input('please provide a note id: ')
+                print('please write your note here (duble enter to finish): ')
+                text = []
+                while True:
+                    new_text = input()
+                    if not new_text:
+                        break
+                    text.append(new_text)
+                return func(id, '\n'.join(text))
             
+            elif func == delete_tag:
+                id = input('please provide a note id: ')
+                tag = input('what tag do you want to delete:')
+                return func(id, tag)
+            
+            elif func == add_tags:
+                id = input('please provide a note id: ')
+                tags = input('please provide tegs separeted with spaces: ')
+                return func(id, tags)
 
             else:  #run func which don't need args. eg.hello, help, show all
                 return func()
@@ -315,6 +352,41 @@ def help():
     except FileNotFoundError:
         raise CustomError("File not found") 
 
+#Luda
+def view_notes():
+    message = ""
+    for note in notes.values():
+        message = str(note) + "\n"
+    if not message:
+        message = "You have no notes yet"
+    return message
+
+def add_note(text: str, tags: str) -> str:
+    note = Note(text, tags)
+    notes.add_note(note)
+    return "Note was successfully added"
+
+def delete_note(id: str) -> str:
+    notes.delete_note(id)
+    return "Note was successfully removed"
+
+def edit_text(id: str, new_text: str) -> str:
+    note = notes.find_id(id)
+    note.edit_text(new_text)
+    notes.save()
+    return "Note was successfully edited"
+
+def add_tags(id: str, tags: str) -> str:
+    note = notes.find_id(id)
+    note.add_tags(tags)
+    notes.save()
+    return f"Tags was successfully added to note with id {id}"
+
+def delete_tag(id: str, tag: str) -> str:
+    note = notes.find_id(id)
+    note.remowe_tag(tag)
+    notes.save()
+    return "Tags was successfully deleted"
 
 commands = {
     "add": add_contact,
@@ -329,4 +401,10 @@ commands = {
     "dtb": dtb,
     "sbs": show_birthdays_soon,
     "help": help,
+    "view notes": view_notes,
+    "new note": add_note,
+    "delete note": delete_note,
+    "edit text": edit_text,
+    "delete tag": delete_tag,
+    "new tags": add_tags,
 }
