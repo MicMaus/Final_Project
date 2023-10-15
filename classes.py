@@ -44,7 +44,7 @@ class Birthday(Field):
         super().__init__(value)
     
     @Field.value.setter
-    def value(self, new_value: str):
+    def value(self, new_value):
         dob = new_value.date()
         self._value = dob
     

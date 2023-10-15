@@ -3,7 +3,7 @@ you can use following commands:
 
 hello - greeting command
 add - to add new contact or add and update inforamtion in existing contact
-change phone - to change one of the the phone number of the contact
+change - to change some field in the specific contact
 remove field - to remove one of the contact information of the contact
 remove contact - to entirely remove specific contact
 search - to search for the contact
@@ -13,4 +13,10 @@ contact - to display the contact information of the specific contact
 dtb - to calculate days to birthday of the specific contact
 sbs - to display birthdays after specific number of days
 help - to display a short guide 
+view notes - to shows all your notes
+new note - to add new note to notebook
+delete note - to delete note by id
+edit text - to edit text of selected note
+delete tag - to delete tag of selected note
+new tags - to add new tags to selected note
 exit / good bye / close - any of these commans will close the bot and save all changes

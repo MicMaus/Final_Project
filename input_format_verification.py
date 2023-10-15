@@ -1,6 +1,21 @@
 import datetime
 import re
+from classes import phone_book
 
+def name_input():
+    def name_validation(name):
+        if name not in phone_book:
+            return False
+        else: 
+            return name
+        
+    while True:
+        input_name = input('please provide a contact name: ')
+        name =  name_validation(input_name)
+        if name:
+            return name
+        else:
+            print("please provide a valid name. Try again: ")
 
 def dob_input():
     def birthday_format_check (birth_date):

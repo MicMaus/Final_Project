@@ -1,16 +1,47 @@
-#from collections.abc import Iterator
-from pathlib import Path
-import main_sorting_files
-from twilio.rest import Client
-from error_handl_decorator import error_handling_decorator
 from error_handl_decorator import CustomError
-#from collections import UserDict
-# import re
-# import datetime
-# import pickle
 from classes import *
 from input_format_verification import *
 import difflib  # matches library
+from notebook import *
+
+notes = NoteBook("notest.bin")
+
+
+#Luda
+def view_notes():
+    message = ""
+    for note in notes.values():
+        message = str(note) + "\n"
+    if not message:
+        message = "You have no notes yet"
+    return message
+
+def add_note(text: str, tags: str) -> str:
+    note = Note(text, tags)
+    notes.add_note(note)
+    return "Note was successfully added"
+
+def delete_note(id: str) -> str:
+    notes.delete_note(id)
+    return "Note was successfully removed"
+
+def edit_text(id: str, new_text: str) -> str:
+    note = notes.find_id(id)
+    note.edit_text(new_text)
+    notes.save()
+    return "Note was successfully edited"
+
+def add_tags(id: str, tags: str) -> str:
+    note = notes.find_id(id)
+    note.add_tags(tags)
+    notes.save()
+    return f"Tags was successfully added to note with id {id}"
+
+def delete_tag(id: str, tag: str) -> str:
+    note = notes.find_id(id)
+    note.remowe_tag(tag)
+    notes.save()
+    return "Tags was successfully deleted"
 
 
 # parameter cutoff regulates sensitivity for matching, 1.0 - full match, 0.0 - input always matches
@@ -33,88 +64,6 @@ def check_command(user_input, commands):
     else:
         return None
 
-
-
-# commands parser, which calls the functions providing needed arguments
-@error_handling_decorator
-def parse_input(user_input):
-    user_input = check_command(user_input, commands)
-    for request in commands:  # dict with commands
-        if user_input.startswith(request):
-            func = commands[request]
-
-            if func == add_contact:
-                name = input('please provide contact name: ')
-                new_phone_number = phone_input()
-                birth_date = dob_input()
-                email = email_input()
-                address = input('please provide an address: ')
-                note = input('please provide a note: ')
-                return func(name, new_phone_number, birth_date, email, address, note)
-            
-            elif func == show_contact:
-                name = input('please provide a contact name: ')
-                return func(name)
-            
-            elif func == change_phone:
-                name = input('please provide a contact name: ')
-                new_phone_number = phone_input()
-                old_phone_number = input('please provide the phone number to be replaced: ') 
-                return func(name, new_phone_number, old_phone_number)
-            
-            elif func == show_page:
-                page = input('please provide the page to display: ')
-                return func(page)
-            
-            elif func == remove_contact:
-                name = input('please provide a contact name you want to remove: ')
-                return func(name)
-
-            elif func == remove_info: 
-                name = input('please provide a contact name to delete information from: ')
-                info_to_delete = input('what type of information will be deleted (phone / birthday / email / address / note): ')
-                if info_to_delete == 'phone':
-                    phone_number = phone_input()
-                    return func(name, info_to_delete, phone_number)
-                
-                return func(name, info_to_delete)
-            
-            elif func == search:
-                search_word = input('please provide a search request: ')
-                return func(search_word)
-            
-            elif func == dtb:
-                name = input('please provide a contact name: ')
-                return func(name)
-            
-            elif func == show_birthdays_soon:
-                  while True:
-                    try:
-                        days = int(input('Enter the number of days: '))
-                        break  # Вихід із циклу, якщо користувач ввів число правильно
-                    except ValueError:
-                        print("Please enter a valid number.")
-
-                  return func(days)
-            
-            elif func == sort_files:
-                folder_path = input("Enter the path to the folder containing unorganized files: ")
-                return func(folder_path)
-
-            elif func == send_sms:
-                contact_name = input("Enter the name of the contact to send SMS: ")
-                contact = phone_book.get(contact_name)
-                if contact:
-                    message = input("Enter the SMS message: ")
-                    for phone in contact.phones:
-                        send_sms(phone.value, message)
-                else:
-                    print("Contact not found")
-
-            else:  #run func which don't need args. eg.hello, help, show all
-                return func()
-
-    raise CustomError("please provide a valid command")
 
 
 # adding new contact/phone number
@@ -141,11 +90,12 @@ def add_contact (name, phone=None, birthday=None, email=None, address=None, note
 
         return "new information successfully added to existing contact"
 
+def change_info(): #does not do any actions, for correct functionality of commands only
+    pass
 
 # change the phone number
 def change_phone (name, new_phone, old_phone):
-    if name not in phone_book:
-        raise CustomError('a name was not found')
+
     if not new_phone or not old_phone:
         raise CustomError("please provide a name, a new number and an old number divided by a space")
     
@@ -153,16 +103,14 @@ def change_phone (name, new_phone, old_phone):
     record.amend_phone(name, new_phone, old_phone)
     return "contact successfully changed"
 
-def remove_contact(name):
-    if name not in phone_book:
-        raise CustomError('name not found')
-    
+
+def remove_contact(name):   
+
     del phone_book[name]
     return "the contact successfully removed"
 
+
 def remove_info(name, field_to_remove, phone=None):
-    if name not in phone_book:
-        raise CustomError('name not found')
     
     record = phone_book[name]
     if phone:
@@ -198,8 +146,6 @@ def remove_info(name, field_to_remove, phone=None):
 
 # show contact details of user
 def show_contact (name): 
-    if name not in phone_book:
-        raise CustomError("name now found, please provide a valid name")
     
     record = phone_book[name]
     phone_numbers = []
@@ -299,10 +245,7 @@ def search (search_word):
         raise CustomError("nothing found")
 
 
-def dtb(name):
-    if name not in phone_book:
-        raise CustomError("please provide a valid name")
-    
+def dtb(name): 
     record = phone_book[name]
     if not hasattr(record, 'birthday'):
             raise CustomError ("no birthday recorded")
@@ -323,7 +266,7 @@ def show_birthdays_soon(days):
         raise CustomError("There are no birthday contacts for the specified number of days")
 
 
-def help():
+def guide():
     try:
         with open(r'./help.txt', 'r') as file:
             file_content = file.read()
@@ -332,29 +275,10 @@ def help():
         raise CustomError("File not found") 
 
 
-def sort_files(folder_path):
-    print(f'Start in {folder_path}')
-    main_sorting_files.main(Path(folder_path))
-
-
-def send_sms(phone_number, message):
-    account_sid = 'ACb5c2ef81d62b89df899d7eb7a74be13d'
-    auth_token = '6eac36a72f90f23d666cc549247f8a4c'
-    client = Client(account_sid, auth_token)
-
-    message = client.messages.create(
-        from_='+16173796725',
-        body=message,
-        to=phone_number
-    )
-
-    print(message.sid)
-
-
 commands = {
     "add": add_contact,
     "contact": show_contact,
-    "change phone": change_phone,
+    "change field": change_info,
     "show all": show_all,
     "page": show_page,
     "remove field": remove_info,
@@ -363,8 +287,11 @@ commands = {
     "search": search,
     "dtb": dtb,
     "sbs": show_birthdays_soon,
-    "help": help,
-    "sort files": sort_files,
-    "sms": send_sms,
+    "guide": guide,
+    "view notes": view_notes,
+    "new note": add_note,
+    "delete note": delete_note,
+    "edit text": edit_text,
+    "delete tag": delete_tag,
+    "new tags": add_tags,
 }
-
