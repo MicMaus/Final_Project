@@ -139,11 +139,25 @@ def parse_input(user_input):
                 if contact:
                     message = input("Enter the SMS message: ")
                     for phone in contact.phones:
-                        print(phone)
+                        print(f'Sending to the number {phone}')
                         try:
                             send_sms(phone, message)
                         except Exception as e:
-                            print(f"Помилка під час відправки SMS: {e}")
+                            print(f"Error while sending SMS: {e}")
+                else:
+                    print("Contact not found")
+
+            elif func == call:
+                contact_name = input("Enter the name of the contact to calling: ")
+                contact = phone_book.get(contact_name)
+                if contact:
+                    message = input("Enter the message: ")
+                    for phone in contact.phones:
+                        print(f'Calling to the number {phone}')
+                        try:
+                            call(phone, message)
+                        except Exception as e:
+                            print(f"Error while calling: {e}")
                 else:
                     print("Contact not found")
 

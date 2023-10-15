@@ -299,6 +299,20 @@ def send_sms(phone_number, message):
     print(message.sid)
 
 
+def call(phone_number, message):
+    account_sid = 'ACb5c2ef81d62b89df899d7eb7a74be13d'
+    auth_token = 'd8cb7333e1a141c64a1654582231bbc4'
+    client = Client(account_sid, auth_token)
+
+    make_call = client.calls.create(
+        twiml=f'<Response><Say>{message}</Say></Response>',
+        to=phone_number,
+        from_='+16173796725'
+    )
+
+    print(make_call.sid)
+
+
 commands = {
     "add": add_contact,
     "contact": show_contact,
@@ -320,4 +334,5 @@ commands = {
     "new tags": add_tags,
     "sort files": sort_files,
     "sms": send_sms,
+    "call": call,
 }
