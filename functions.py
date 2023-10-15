@@ -1,4 +1,7 @@
 #from collections.abc import Iterator
+from pathlib import Path
+import main_sorting_files
+from twilio.rest import Client
 from error_handl_decorator import error_handling_decorator
 from error_handl_decorator import CustomError
 #from collections import UserDict
@@ -94,6 +97,19 @@ def parse_input(user_input):
 
                   return func(days)
             
+            elif func == sort_files:
+                folder_path = input("Enter the path to the folder containing unorganized files: ")
+                return func(folder_path)
+
+            elif func == send_sms:
+                contact_name = input("Enter the name of the contact to send SMS: ")
+                contact = phone_book.get(contact_name)
+                if contact:
+                    message = input("Enter the SMS message: ")
+                    for phone in contact.phones:
+                        send_sms(phone.value, message)
+                else:
+                    print("Contact not found")
 
             else:  #run func which don't need args. eg.hello, help, show all
                 return func()
@@ -316,6 +332,25 @@ def help():
         raise CustomError("File not found") 
 
 
+def sort_files(folder_path):
+    print(f'Start in {folder_path}')
+    main_sorting_files.main(Path(folder_path))
+
+
+def send_sms(phone_number, message):
+    account_sid = 'ACb5c2ef81d62b89df899d7eb7a74be13d'
+    auth_token = '6eac36a72f90f23d666cc549247f8a4c'
+    client = Client(account_sid, auth_token)
+
+    message = client.messages.create(
+        from_='+16173796725',
+        body=message,
+        to=phone_number
+    )
+
+    print(message.sid)
+
+
 commands = {
     "add": add_contact,
     "contact": show_contact,
@@ -329,4 +364,7 @@ commands = {
     "dtb": dtb,
     "sbs": show_birthdays_soon,
     "help": help,
+    "sort files": sort_files,
+    "sms": send_sms,
 }
+
