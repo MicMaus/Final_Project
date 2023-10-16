@@ -48,6 +48,71 @@ def delete_tag(id: str, tag: str) -> str:
     notes.save()
     return "Tags was successfully deleted"
 
+def find_by_tag(tags: str, show_desc: bool) -> str:
+    intersec = " and " in tags
+    tags = tags.replace(" and ", " ").replace(" or ", " ")
+    tag_list = []
+    tag_list.extend(tags.split(" "))
+    for i in range(len(tag_list)):
+        if not tag_list[i].startswith("#"):
+            tag_list[i] = "#" + tag_list[i]
+    
+    result = notes.find_by_tag(tag_list, intersec, show_desc)
+
+    message = ""
+    for note in result:
+        message += "\n" + str(note) + "\n"
+    if not message:
+        message = "I didn't find anything. Correct search conditions."
+    return message
+
+def input_note_params(param: str):
+    correct = False
+    value = ""
+    while not correct:
+        if param == "id":
+            value = input('please provide a note id: ')
+            correct = value in notes
+        
+        elif param == "text":
+            print('please write your note here (duble enter to finish): ')
+            value = []
+            while True:
+                new_text = input()
+                if not new_text:
+                    break
+                value.append(new_text)
+            value = '\n'.join(value)
+            correct = value != ""
+
+        elif param == "tag":
+            value = input('please giva me a tag please: ')
+            correct = value in notes.tag_cloud
+
+        elif param == "tags":
+            value = input('please provide tegs separeted with spaces: ')
+            correct = value != ""
+
+        elif param == "show_desc":
+            value = input("Show newest on the top (Y/N)? ")
+            value = value.lower() == "y"
+            correct = True
+
+        if not correct:
+            print("You have entered incorrect data. Try again please.")
+
+    return value
+
+def str_to_tags(text: str) -> [str]:
+    tags = []
+    for tag in text.split(" "):
+        if not tag:
+            continue
+        if not tag.startswith("#"):
+            tag = "#" + tag
+        tags.append(tag)
+    return tags
+
 
 # parameter cutoff regulates sensitivity for matching, 1.0 - full match, 0.0 - input always matches
 def find_closest_match(user_input, commands):
@@ -257,13 +322,13 @@ def dtb(name):
     return record.days_to_birthday()
 
 
-#shows upcoming birthdays
+#shows upcoming birthdays/
 def show_birthdays_soon(days):
     result = []
     for name, record in phone_book.items():
         days_until_birthday = record.days_to_birthday()
 
-        if days_until_birthday is not None and 0 <= days_until_birthday <= days:
+        if days_until_birthday is not None and days_until_birthday == days:
             result.append(show_contact(name))
     if result:
         return ';\n'.join(result)
@@ -312,70 +377,6 @@ def call(phone_number, message):
 
     print(make_call.sid)
 
-def find_by_tag(tags: str, show_desc: bool) -> str:
-    intersec = " and " in tags
-    tags = tags.replace(" and ", " ").replace(" or ", " ")
-    tag_list = []
-    tag_list.extend(tags.split(" "))
-    for i in range(len(tag_list)):
-        if not tag_list[i].startswith("#"):
-            tag_list[i] = "#" + tag_list[i]
-    
-    result = notes.find_by_tag(tag_list, intersec, show_desc)
-
-    message = ""
-    for note in result:
-        message += "\n" + str(note) + "\n"
-    if not message:
-        message = "I didn't find anything. Correct search conditions."
-    return message
-
-def input_note_params(param: str):
-    correct = False
-    value = ""
-    while not correct:
-        if param == "id":
-            value = input('please provide a note id: ')
-            correct = value in notes
-        
-        elif param == "text":
-            print('please write your note here (duble enter to finish): ')
-            value = []
-            while True:
-                new_text = input()
-                if not new_text:
-                    break
-                value.append(new_text)
-            value = '\n'.join(value)
-            correct = value != ""
-
-        elif param == "tag":
-            value = input('please giva me a tag please: ')
-            correct = value in notes.tag_cloud
-
-        elif param == "tags":
-            value = input('please provide tegs separeted with spaces: ')
-            correct = value != ""
-
-        elif param == "show_desc":
-            value = input("Show newest on the top (Y/N)? ")
-            value = value.lower() == "y"
-            correct = True
-
-        if not correct:
-            print("You have entered incorrect data. Try again please.")
-
-    return value
-
-def str_to_tags(text: str) -> [str]:
-    tags = []
-    for tag in text.split(" "):
-        if not tag:
-            continue
-        if not tag.startswith("#"):
-            tag = "#" + tag
-        tags.append(tag)
-    return tags
 
 commands = {
     "add": add_contact,

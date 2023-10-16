@@ -90,6 +90,7 @@ def parse_input(user_input):
 
                   return func(days)
             
+            
             #Notes commands
             elif func == add_note:
                 text = input_note_params("text")
@@ -120,6 +121,7 @@ def parse_input(user_input):
                 show_desc = input_note_params("show_desc")
                 return func(tags, show_desc)
             #end notes commands
+
             
             elif func == sort_files:
                 folder_path = input("Enter the path to the folder containing unorganized files: ")
