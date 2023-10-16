@@ -90,43 +90,36 @@ def parse_input(user_input):
 
                   return func(days)
             
-            
+            #Notes commands
             elif func == add_note:
-                print('please write your note here (duble enter to finish): ')
-                text = []
-                while True:
-                    new_text = input()
-                    if not new_text:
-                        break
-                    text.append(new_text)
-                tags = input('please provide tegs separeted with spaces: ')
-                return func('\n'.join(text), tags)
+                text = input_note_params("text")
+                tags = input_note_params("tags")
+                return func(text, tags)
 
             elif func == delete_note:
-                id = input('please provide a note id: ')
+                id = input_note_params("id")
                 return func(id)
 
             elif func == edit_text:
-                id = input('please provide a note id: ')
-                print('please write your note here (duble enter to finish): ')
-                text = []
-                while True:
-                    new_text = input()
-                    if not new_text:
-                        break
-                    text.append(new_text)
-                return func(id, '\n'.join(text))
+                id = input_note_params("id")
+                text = input_note_params("text")
+                return func(id, text)
 
             elif func == delete_tag:
-                id = input('please provide a note id: ')
-                tag = input('what tag do you want to delete:')
+                id = input_note_params("id")
+                tag = input_note_params("tag")
                 return func(id, tag)
 
             elif func == add_tags:
-                id = input('please provide a note id: ')
-                tags = input('please provide tegs separeted with spaces: ')
+                id = input_note_params("id")
+                tags = input_note_params("tags")
                 return func(id, tags)
-
+            
+            elif func == find_by_tag:
+                tags = input_note_params("tags")
+                show_desc = input_note_params("show_desc")
+                return func(tags, show_desc)
+            #end notes commands
             
             elif func == sort_files:
                 folder_path = input("Enter the path to the folder containing unorganized files: ")
