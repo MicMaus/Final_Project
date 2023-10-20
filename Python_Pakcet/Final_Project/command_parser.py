@@ -1,9 +1,18 @@
-from Final_Project.functions import *
-from Final_Project.error_handl_decorator import error_handling_decorator
+from Final_Project.error_handl_decorator import CustomError
+from Final_Project.classes import *
+from Final_Project.input_format_verification import *
+import difflib  # matches library
+from Final_Project.notebook import *
+from pathlib import Path
+import Final_Project.main_sorting_files
+from twilio.rest import Client
+from Final_Project.user_config import Config
+from Final_Project.gen_config import *
+import time
+from colorama import Fore, Style
+
 
 # commands parser, which calls the functions providing needed arguments
-
-
 @error_handling_decorator
 def parse_input(user_input):
     user_input = check_command(user_input, commands)
@@ -41,7 +50,7 @@ def parse_input(user_input):
                     return add_contact(name, birthday=birth_date)
 
                 elif info_to_amend == 'email':
-                    email == email_input()
+                    email = email_input()
                     return add_contact(name, email=email)
 
                 elif info_to_amend == 'address':
@@ -52,7 +61,8 @@ def parse_input(user_input):
                     note = input('please provide the new note: ')
                     return add_contact(name, note=note)
 
-                elif info_to_delete != 'phone' and info_to_delete != 'birthday' and info_to_delete != 'email' and info_to_delete != 'address' and info_to_delete != 'note':
+                elif (info_to_amend != 'phone' and info_to_amend != 'birthday'
+                      and info_to_amend != 'email' and info_to_amend != 'address' and info_to_amend != 'note'):
                     raise CustomError("please provide valid field to amend")
 
             elif func == show_page:
@@ -66,16 +76,16 @@ def parse_input(user_input):
             elif func == remove_info:
                 name = name_input()
                 contact = phone_book.get(name)
-                info_to_delete = input(
-                    'what type of information will be deleted (phone / birthday / email / address / note): ')
+                info_to_delete = input('what type of information will be deleted (phone / birthday / email / address '
+                                       '/ note): ')
                 if info_to_delete == 'phone':
                     print("Please choose index of the phone to be removed:")
                     phone_number = str(phone_index_input(contact))
                     return func(name, info_to_delete, phone_number)
 
-                elif info_to_delete != 'phone' and info_to_delete != 'birthday' and info_to_delete != 'email' and info_to_delete != 'address' and info_to_delete != 'note':
-                    raise CustomError(
-                        'please provide valid field to be deleted')
+                elif (info_to_delete != 'phone' and info_to_delete != 'birthday'
+                      and info_to_delete != 'email' and info_to_delete != 'address' and info_to_delete != 'note'):
+                    raise CustomError('please provide valid field to be deleted')
 
                 return func(name, info_to_delete)
 
@@ -96,6 +106,7 @@ def parse_input(user_input):
                         print("Please enter a valid number.")
 
                 return func(days)
+
 
             # Notes commands
             elif func == add_note:
@@ -133,34 +144,83 @@ def parse_input(user_input):
                 return func(folder_path)
 
             elif func == send_sms:
-                contact_name = name_input()
+                contact_name = input("Enter the name of the contact to send SMS: ")
                 contact = phone_book.get(contact_name)
                 if contact:
-                    message = input("Enter the SMS message: ")
+                    if len(contact.phones) > 1:
+                        print("Choose a phone number to send the SMS:")
+                        for i, phone in enumerate(contact.phones, start=1):
+                            print(f"{i}. {phone}")
 
-                    phone = phone_index_input(contact)
-                    print(f'Sending sms to the number {phone}')
-                    result = func(phone, message)
-                    print(result)
-                    return None
+                        try:
+                            choice = int(input("Enter the number of the phone to send SMS: "))
+                            if 1 <= choice <= len(contact.phones):
+                                phone = contact.phones[choice - 1]
+                            else:
+                                print("Invalid choice. SMS not sent.")
+                                continue
+                        except ValueError:
+                            print("Invalid input. SMS not sent.")
+                            continue
+                    else:
+                        phone = contact.phones[0]
+
+                    message = input("Enter the SMS message: ")
+                    try:
+                        send_sms(phone, message)
+                        for _ in range(3):
+                            print("Sending", end="", flush=True)
+                            time.sleep(0.25)
+                            for i in range(3):
+                                print(".", end="", flush=True)
+                                time.sleep(0.25)
+                            print("\r", end="", flush=True)
+                        print(Fore.BLUE + "Message sent." + Style.RESET_ALL)
+                    except Exception as e:
+                        print(f"Failed to send SMS to {phone}: {str(e)}")
                 else:
-                    return "Contact not found"
+                    print("Contact not found")
 
             elif func == call:
-                contact_name = name_input()
+                contact_name = input("Enter the name of the contact to make a call: ")
                 contact = phone_book.get(contact_name)
                 if contact:
-                    message = input("Enter the message: ")
+                    if len(contact.phones) > 1:
+                        print("Choose a phone number to make the call:")
+                        for i, phone in enumerate(contact.phones, start=1):
+                            print(f"{i}. {phone}")
 
-                    phone = phone_index_input(contact)
-                    print(f'Calling to the number {phone}')
-                    result = func(phone, message)
-                    print(result)
-                    return None
+                        try:
+                            choice = int(input("Enter the number of the phone to make the call: "))
+                            if 1 <= choice <= len(contact.phones):
+                                phone = contact.phones[choice - 1]
+                            else:
+                                print("Invalid choice. Call not made.")
+                                continue
+                        except ValueError:
+                            print("Invalid input. Call not made.")
+                            continue
+                    else:
+                        phone = contact.phones[0]
+
+                    message = input("Enter the call message: ")
+
+                    try:
+                        call(phone, message)
+                        for _ in range(6):
+                            print(f"Calling {phone}", end="", flush=True)
+                            time.sleep(0.25)
+                            for i in range(3):
+                                print(".", end="", flush=True)
+                                time.sleep(0.25)
+                            print("\r", end="", flush=True)
+                        print(Fore.BLUE + "Call in progress." + Style.RESET_ALL)
+                    except Exception as e:
+                        print(f"Failed to make a call to {phone}: {str(e)}")
                 else:
-                    return "Contact not found"
+                    print("Contact not found")
 
-            else:  # run func which don't need args. eg.hello, help, show all
+            else:  # run func which don't need args. e.g.hello, help, show all
                 return func()
 
     raise CustomError("please provide a valid command")
